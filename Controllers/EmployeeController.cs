@@ -27,12 +27,15 @@ public class EmployeeController : ControllerBase
 
         var employeeViewModel = new EmployeeViewModel
         {
-            EmployeeId=employee.EmployeeId,
+            EmployeeId = employee.EmployeeId,
             Name = employee.Name,
             Address = employee.Address,
             BaseSalary = employee.BaseSalary,
-            NetSalary= employee.NetSalary,
-            DeductedAmount= employee.DeductedAmount,
+            NetSalary = employee.NetSalary,
+            DeductedAmount = employee.DeductedAmount,
+            LeaveDays= employee.LeaveDays,
+            DateofPayment= employee.DateofPayment,
+            PaymentStatus= employee.PaymentStatus,
         };
 
         return employeeViewModel;
@@ -48,7 +51,7 @@ public class EmployeeController : ControllerBase
         {
             var employeeViewModel = new EmployeeViewModel
             {
-                EmployeeId=employee.EmployeeId,
+                EmployeeId = employee.EmployeeId,
                 Name = employee.Name,
                 Address = employee.Address,
                 BaseSalary = employee.BaseSalary
@@ -59,20 +62,31 @@ public class EmployeeController : ControllerBase
 
         return employeeViewModels;
     }
+    [HttpPost("{salary}")]
+    public IActionResult SalaryEmployee(Employee employeeModel)
+    {
+        _employeeService.SalaryEmployee(employeeModel);
+        return Ok("Salary details recorded successfully.");
+    }
+
+
+    [HttpPost("salarypaydetails")]
+    public IActionResult SalaryPayDetails(SalaryPayDetail salaryPayDetail)
+    {
+        _employeeService.SalaryPayDetails(salaryPayDetail);
+        return Ok("Salary details recorded successfully.");
+    }
+
+
 
     [HttpPost]
-    public IActionResult AddEmployee(Employee employee)
+    public IActionResult AddEmployee(Employee employeeModel)
     {
-        var Employee = new Employee
-        {
-            Name = employee.Name,
-            Address = employee.Address,
-            BaseSalary = employee.BaseSalary
-        };
+        _employeeService.AddEmployee(employeeModel);
 
-        _employeeService.AddEmployee(employee);
-        return CreatedAtAction(nameof(GetEmployeeById), new { id = employee.EmployeeId }, employee);
+        return CreatedAtAction(nameof(GetEmployeeById), new { id = employeeModel.EmployeeId }, employeeModel);
     }
+
 
     [HttpPut("{id}")]
     public IActionResult UpdateEmployee(int id, EmployeeViewModel employeeViewModel)
@@ -93,7 +107,7 @@ public class EmployeeController : ControllerBase
     }
 
 
-[HttpDelete("{id}")]
+    [HttpDelete("{id}")]
     public IActionResult DeleteEmployee(int id)
     {
         var existingEmployee = _employeeService.GetEmployeeViewModelById(id);
@@ -107,19 +121,14 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpPost("take-leave")]
-  
+
+
     public IActionResult TakeLeave(LeaveRequest leaveRequest)
     {
         try
         {
-            // Convert EmployeeId to int if necessary
-            int employeeId = Convert.ToInt32(leaveRequest.EmployeeId);
-
-            // Calculate leave days
-            int leaveDays = (leaveRequest.EndDate - leaveRequest.StartDate).Days;
-
-            // Take leave and update salary details
-            _employeeService.TakeLeave(employeeId, leaveDays);
+            // Pass the necessary parameters to the service method
+            _employeeService.TakeLeave(leaveRequest.EmployeeId, leaveRequest.LeaveDays);
 
             return Ok("Leave taken successfully.");
         }
@@ -128,5 +137,5 @@ public class EmployeeController : ControllerBase
             return StatusCode(500, $"An error occurred while taking leave: {ex.Message}");
         }
     }
-
 }
+

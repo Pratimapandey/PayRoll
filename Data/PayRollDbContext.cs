@@ -22,14 +22,15 @@ namespace PayRollManagement.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure primary key for IdentityUserLogin<string>
+           
             modelBuilder.Entity<IdentityUserLogin<string>>().HasKey(l => new { l.LoginProvider, l.ProviderKey });
 
-            // Configure composite key for SalaryPayDeductionDetail
+      
             modelBuilder.Entity<SalaryPayDeductionDetail>()
                 .HasKey(s => new { s.SalaryPayDeductionDetailId, s.EmployeeId, s.Month, s.Year });
 
-            // Add other entity configurations and relationships here if needed
+
+   
         }
     }
 }

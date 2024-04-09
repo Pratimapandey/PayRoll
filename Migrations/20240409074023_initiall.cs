@@ -4,7 +4,7 @@
 
 namespace PayRollManagement.Migrations
 {
-    public partial class initialmigrationnnnmmmmmmmmm : Migration
+    public partial class initiall : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

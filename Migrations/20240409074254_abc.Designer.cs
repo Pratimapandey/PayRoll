@@ -12,8 +12,8 @@ using PayRollManagement.Data;
 namespace PayRollManagement.Migrations
 {
     [DbContext(typeof(PayRollDbContext))]
-    [Migration("20240407044336_initialmigrationnnnmmmmmmm")]
-    partial class initialmigrationnnnmmmmmmm
+    [Migration("20240409074254_abc")]
+    partial class abc
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -248,9 +248,6 @@ namespace PayRollManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("NetSalary")
-                        .HasColumnType("decimal(18,2)");
-
                     b.HasKey("EmployeeId");
 
                     b.ToTable("Employees");
@@ -270,6 +267,9 @@ namespace PayRollManagement.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("LeaveDays")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -286,11 +286,22 @@ namespace PayRollManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalaryDetailId"), 1L, 1);
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("BaseSalary")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("NetSalary")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("SalaryDetailId");
 
@@ -302,7 +313,10 @@ namespace PayRollManagement.Migrations
             modelBuilder.Entity("PayRollManagement.Model.SalaryPayDeductionDetail", b =>
                 {
                     b.Property<int>("SalaryPayDeductionDetailId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalaryPayDeductionDetailId"), 1L, 1);
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -316,16 +330,7 @@ namespace PayRollManagement.Migrations
                     b.Property<decimal>("DeductedAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("DeductionName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SalaryPayDetailId")
-                        .HasColumnType("int");
-
                     b.HasKey("SalaryPayDeductionDetailId", "EmployeeId", "Month", "Year");
-
-                    b.HasIndex("SalaryPayDetailId");
 
                     b.ToTable("SalaryPayDeductionDetails");
                 });
@@ -338,24 +343,17 @@ namespace PayRollManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalaryPayDetailId"), 1L, 1);
 
-                    b.Property<decimal>("BaseSalary")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<DateTime>("DateofPayment")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("NetSalary")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SalaryPayDetailId");
-
-                    b.HasIndex("EmployeeId");
 
                     b.ToTable("SalaryPayDetails");
                 });
@@ -413,40 +411,13 @@ namespace PayRollManagement.Migrations
 
             modelBuilder.Entity("PayRollManagement.Model.SalaryDetail", b =>
                 {
-                    b.HasOne("PayRollManagement.Model.Employee", "Employee")
+                    b.HasOne("PayRollManagement.Model.Employee", "employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("PayRollManagement.Model.SalaryPayDeductionDetail", b =>
-                {
-                    b.HasOne("PayRollManagement.Model.SalaryPayDetail", "SalaryPayDetail")
-                        .WithMany("SalaryPayDeductionDetails")
-                        .HasForeignKey("SalaryPayDetailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SalaryPayDetail");
-                });
-
-            modelBuilder.Entity("PayRollManagement.Model.SalaryPayDetail", b =>
-                {
-                    b.HasOne("PayRollManagement.Model.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("PayRollManagement.Model.SalaryPayDetail", b =>
-                {
-                    b.Navigation("SalaryPayDeductionDetails");
+                    b.Navigation("employee");
                 });
 #pragma warning restore 612, 618
         }

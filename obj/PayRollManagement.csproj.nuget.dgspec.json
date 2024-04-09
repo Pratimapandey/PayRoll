@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\api\\PayRoll\\Testing\\PayRollManagement\\PayRollManagement.csproj": {}
+    "C:\\Users\\Admin\\Payroll\\PayRollManagement.csproj": {}
   },
   "projects": {
-    "C:\\api\\PayRoll\\Testing\\PayRollManagement\\PayRollManagement.csproj": {
+    "C:\\Users\\Admin\\Payroll\\PayRollManagement.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\api\\PayRoll\\Testing\\PayRollManagement\\PayRollManagement.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Payroll\\PayRollManagement.csproj",
         "projectName": "PayRollManagement",
-        "projectPath": "C:\\api\\PayRoll\\Testing\\PayRollManagement\\PayRollManagement.csproj",
+        "projectPath": "C:\\Users\\Admin\\Payroll\\PayRollManagement.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\api\\PayRoll\\Testing\\PayRollManagement\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Payroll\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",

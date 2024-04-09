@@ -20,51 +20,34 @@ namespace PayRollManagement.Services.Implementation
             var employee = _context.Employees.FirstOrDefault(e => e.EmployeeId == id);
             if (employee != null)
             {
-                if (HasTakenLeave(id))
-                {
-                    var salaryPayDetail = _context.SalaryPayDetails
-                        .FirstOrDefault(sd => sd.EmployeeId == id && sd.Month == DateTime.Now.Month && sd.Year == DateTime.Now.Year);
+                var salaryPayDetail = _context.SalaryDetails.FirstOrDefault(sd => sd.EmployeeId == id);
+                var deductedAmount = _context.SalaryPayDeductionDetails
+                    .Where(d => d.EmployeeId == id && d.Month == DateTime.Now.Month && d.Year == DateTime.Now.Year)
+                    .Sum(d => d.DeductedAmount);
 
-                    var deductedAmount = _context.SalaryPayDeductionDetails
-                        .Where(d => d.EmployeeId == id && d.Month == DateTime.Now.Month && d.Year == DateTime.Now.Year)
-                        .Sum(d => d.DeductedAmount);
+                // Get leave request details for the employee
+                var leaveRequest = _context.LeaveRequests.FirstOrDefault(lr => lr.EmployeeId == id);
+                int leaveDays = leaveRequest != null ? leaveRequest.LeaveDays : 0;
 
-                    return new EmployeeViewModel
-                    {
-                        EmployeeId = employee.EmployeeId,
-                        Name = employee.Name,
-                        Address = employee.Address,
-                        LeaveStartDate = DateTime.Now, // You may need to change this
-                        LeaveEndDate = DateTime.Now, // You may need to change this
-                        BaseSalary = salaryPayDetail.BaseSalary , // Use null conditional operator to avoid null reference exception
-                        NetSalary = salaryPayDetail.NetSalary, // Use null conditional operator to avoid null reference exception
-                        DeductedAmount = deductedAmount
-                    };
-                }
-                else
+                // Get salary pay details for the employee
+                var salaryPayDetails = _context.SalaryPayDetails.FirstOrDefault(sp => sp.EmployeeId == id);
+                DateTime dateOfPayment = salaryPayDetails.DateofPayment;
+                string paymentStatus = salaryPayDetails.PaymentStatus;
+
+                return new EmployeeViewModel
                 {
-                    // If employee hasn't taken leave, retrieve base salary and net salary from the employee object
-                    return new EmployeeViewModel
-                    {
-                        EmployeeId = employee.EmployeeId,
-                        Name = employee.Name,
-                        Address = employee.Address,
-                        LeaveStartDate = DateTime.Now, // You may need to change this
-                        LeaveEndDate = DateTime.Now, // You may need to change this
-                 
-                        BaseSalary = employee.BaseSalary, // Use base salary from the employee table
-                        NetSalary = employee.NetSalary, // Use net salary from the employee table
-                        DeductedAmount = 0 // No deductions as employee didn't take leave
-                    };
-                }
+                    EmployeeId = employee.EmployeeId,
+                    Name = employee.Name,
+                    Address = employee.Address,
+                    BaseSalary = salaryPayDetail.BaseSalary,
+                    NetSalary = salaryPayDetail.NetSalary,
+                    DeductedAmount = deductedAmount,
+                    LeaveDays = leaveDays,
+                    DateofPayment = dateOfPayment,
+                    PaymentStatus = paymentStatus
+                };
             }
             return null; // or throw an exception if employee not found
-        }
-
-        private bool HasTakenLeave(int employeeId)
-        {
-            // Check if there are any deductions for the current month and year
-            return _context.SalaryPayDeductionDetails.Any(d => d.EmployeeId == employeeId && d.Month == DateTime.Now.Month && d.Year == DateTime.Now.Year);
         }
 
         public List<EmployeeViewModel> GetAllEmployeeViewModels()
@@ -74,9 +57,7 @@ namespace PayRollManagement.Services.Implementation
 
             foreach (var employee in employees)
             {
-                var salaryPayDetail = _context.SalaryPayDetails
-                    .FirstOrDefault(sd => sd.EmployeeId == employee.EmployeeId && sd.Month == DateTime.Now.Month && sd.Year == DateTime.Now.Year);
-
+                var salaryPayDetail = _context.SalaryDetails.FirstOrDefault(sd => sd.EmployeeId == employee.EmployeeId);
                 var deductedAmount = _context.SalaryPayDeductionDetails
                     .Where(d => d.EmployeeId == employee.EmployeeId && d.Month == DateTime.Now.Month && d.Year == DateTime.Now.Year)
                     .Sum(d => d.DeductedAmount);
@@ -86,10 +67,7 @@ namespace PayRollManagement.Services.Implementation
                     EmployeeId = employee.EmployeeId,
                     Name = employee.Name,
                     Address = employee.Address,
-                    LeaveStartDate = DateTime.Now, // You may need to change this
-                    LeaveEndDate = DateTime.Now, // You may need to change this
-
-                    BaseSalary = salaryPayDetail?.BaseSalary ?? 0, 
+                    BaseSalary = salaryPayDetail?.BaseSalary ?? 0,
                     NetSalary = salaryPayDetail?.NetSalary ?? 0,
                     DeductedAmount = deductedAmount
                 };
@@ -103,9 +81,55 @@ namespace PayRollManagement.Services.Implementation
 
         public void AddEmployee(Employee employee)
         {
-            _context.Employees.Add(employee);
+            try
+            {
+                // Add employee to the database
+                _context.Employees.Add(employee);
+
+                // Save changes to the Employees table to generate the EmployeeId
+                _context.SaveChanges();
+
+
+            }
+            catch (Exception ex)
+            {
+                // Handle exception appropriately
+                Console.WriteLine($"An error occurred while adding the employee: {ex.Message}");
+                throw; // Rethrow the exception to be handled at a higher level
+            }
+        }
+        public void SalaryEmployee(Employee employee)
+        {
+            // Create and save initial salary details for the new employee
+            var salaryDetail = new SalaryDetail
+            {
+                EmployeeId = employee.EmployeeId, // Use the generated EmployeeId
+                BaseSalary = employee.BaseSalary,
+                NetSalary = employee.BaseSalary,
+                Name = employee.Name,
+                Address = employee.Address,
+                // Set other properties as needed
+            };
+
+            // Add the salary detail to the SalaryDetails table
+            _context.SalaryDetails.Add(salaryDetail);
+
+            // Save changes to record the initial salary details
             _context.SaveChanges();
         }
+        public void SalaryPayDetails(SalaryPayDetail salaryPayDetail)
+        {
+            var newSalaryPayDetail = new SalaryPayDetail()
+            {
+                EmployeeId = salaryPayDetail.EmployeeId,
+                DateofPayment = salaryPayDetail.DateofPayment,
+                PaymentStatus = salaryPayDetail.PaymentStatus // Use the generated EmployeeId
+            };
+
+            _context.SalaryPayDetails.Add(newSalaryPayDetail);
+            _context.SaveChanges();
+        }
+
 
         public void UpdateEmployee(EmployeeViewModel employeeViewModel)
         {
@@ -166,86 +190,79 @@ namespace PayRollManagement.Services.Implementation
                 decimal netSalary = employee.BaseSalary;
 
                 // Subtract deductions from net salary
-                var deductions = _context.SalaryDetails.Where(sd => sd.EmployeeId == employeeId).Sum(sd => sd.BaseSalary);
+                var deductions = _context.SalaryPayDeductionDetails.Where(sd => sd.EmployeeId == employeeId)
+                                                                   .Sum(sd => sd.DeductedAmount);
                 netSalary -= deductions;
 
                 return netSalary;
             }
             throw new InvalidOperationException("Employee not found");
         }
-        public decimal CalculateDeductedSalary(decimal baseSalary, int workingDays, int numberOfLeaveDays)
+
+
+        public void TakeLeave(int employeeId, int LeaveDays)
         {
-            // Calculate deducted salary based on the provided formula
-            decimal deductedAmount = (baseSalary / workingDays) * numberOfLeaveDays;
-            return deductedAmount;
-        }
-        public void TakeLeave(int employeeId, int numberOfDays)
-        {
-            try
+            var employee = _context.Employees.FirstOrDefault(e => e.EmployeeId == employeeId);
+            if (employee != null)
             {
-                var employee = _context.Employees.FirstOrDefault(e => e.EmployeeId == employeeId);
-                if (employee != null)
+                // Update leave request details
+                var leaveReq = _context.LeaveRequests.FirstOrDefault(lr => lr.EmployeeId == employeeId);
+                if (leaveReq != null)
                 {
-                    // Calculate deducted amount for leave
-                    decimal deductedAmount = CalculateDeductedSalary(employee.BaseSalary, 20, numberOfDays);
-
-                    // Calculate net salary
-                    decimal netSalary = CalculateNetSalary(employeeId);
-                    netSalary -= deductedAmount;
-
-                    // Check if a deduction detail record already exists for the current month and year
-                    var existingDeductionDetail = _context.SalaryPayDeductionDetails.FirstOrDefault(d =>
-                        d.EmployeeId == employeeId && d.Month == DateTime.Now.Month && d.Year == DateTime.Now.Year);
-
-                    if (existingDeductionDetail != null)
+                    leaveReq.StartDate = DateTime.Now; // Update start date assuming leave starts now
+                    leaveReq.EndDate = leaveReq.StartDate.AddDays(LeaveDays); // Update end date
+                    leaveReq.LeaveDays = LeaveDays; // Update leave days
+                }
+                else
+                {
+                    // Create new leave request if not exists
+                    leaveReq = new LeaveRequest
                     {
-                        // Update existing deduction detail with the new deducted amount
-                        existingDeductionDetail.DeductedAmount += deductedAmount;
-                    }
-                    else
-                    {
-                        // Create new salary details for the current month and year
-                        var salaryPayDetail = new SalaryPayDetail
-                        {
-                            EmployeeId = employeeId,
-                            Month = DateTime.Now.Month, // Assuming current month
-                            Year = DateTime.Now.Year, // Assuming current year
-                            BaseSalary = employee.BaseSalary, // Main salary is in base salary
-                            NetSalary = netSalary
-                        };
-                        _context.SalaryPayDetails.Add(salaryPayDetail);
+                        EmployeeId = employeeId,
+                        StartDate = DateTime.Now, // Start date assuming leave starts now
+                        EndDate = DateTime.Now.AddDays(LeaveDays), // End date
+                        LeaveDays = LeaveDays // Leave days
+                    };
+                    _context.LeaveRequests.Add(leaveReq);
+                }
 
-                        // Save deduction details
-                        var deductionDetail = new SalaryPayDeductionDetail
-                        {
-                            EmployeeId = employeeId,
-                            Month = DateTime.Now.Month, // Assuming current month
-                            Year = DateTime.Now.Year, // Assuming current year
-                            DeductionName = "Leave Deduction", // You can provide a meaningful deduction name
-                            DeductedAmount = deductedAmount,
-                            // Assign the corresponding salary detail
-                        };
-                        _context.SalaryPayDeductionDetails.Add(deductionDetail);
-                    }
+                // Update salary details for deductions
+                var salaryDetail = _context.SalaryDetails.FirstOrDefault(sd => sd.EmployeeId == employeeId);
+                if (salaryDetail != null)
+                {
+                    // Calculate deducted amount based on base salary and leave days
+                    decimal deductedAmount = CalculateDeductedSalary(employeeId, LeaveDays);
+
+                    // Update net salary by deducting the deducted amount
+                    salaryDetail.NetSalary -= deductedAmount;
+
+                    // Save deduction details
+                    var deductionDetail = new SalaryPayDeductionDetail
+                    {
+                        EmployeeId = employeeId,
+                        Month = DateTime.Now.Month, // Assuming current month
+                        Year = DateTime.Now.Year, // Assuming current year
+                       // You can provide a meaningful deduction name
+                        DeductedAmount = deductedAmount
+                    };
+                    _context.SalaryPayDeductionDetails.Add(deductionDetail);
 
                     _context.SaveChanges();
                 }
+
                 else
                 {
                     throw new InvalidOperationException("Employee not found");
                 }
             }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it appropriately
-                throw new InvalidOperationException("An error occurred while taking leave: " + ex.Message);
-            }
+
+
+
         }
 
+
+
     }
-
-
-
 }
 
 

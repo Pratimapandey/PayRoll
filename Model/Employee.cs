@@ -6,7 +6,8 @@
         public string Name { get; set; }
         public string Address { get; set; }
         public decimal BaseSalary { get; set; }
-        public decimal NetSalary { get; set; }
+      /*  public decimal BaseSalary { get; set; }
+        public decimal NetSalary { get; set; }*/
 //public string LeaveRequest { get; set; }
 
         // Navigation property to the SalaryDetails entity
